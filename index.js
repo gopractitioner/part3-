@@ -2,7 +2,7 @@ const http = require('http')
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
-
+morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 const requestLogger = (request, response, next) => {
     console.log('Method:', request.method)
     console.log('Path:  ', request.path)
@@ -13,7 +13,22 @@ const requestLogger = (request, response, next) => {
 
 app.use(express.json())
 //app.use(requestLogger)
-app.use(morgan('tiny'))
+//app.use(morgan('tiny'))
+
+//app.use(morgan(':method :url :status :response-time ms - :body'));
+
+app.use(
+    morgan(function (tokens, req, res) {
+        return [
+            tokens.method(req, res),
+            tokens.url(req, res),
+            tokens.status(req, res),
+            tokens.res(req, res, 'content-length'), '-',
+            tokens['response-time'](req, res), 'ms',
+            tokens.body(req, res)
+        ].join(' ')
+    })
+)
 
 let persons = [
     {
